@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="vue.js"></script>
+    <script src="axios.min.js"></script>
+    <link rel="stylesheet" href="boostrap/css/bootstrap.min.css">
+    <style>
+        #app {
+            text-align: center;
+            padding: 100px;
+        }
+
+        .phoShow {
+            width: 600px;
+            height: 600px;
+            transform: rotate(90deg);
+        }
+
+        .phoHide {
+            width: 600px;
+            height: 600px;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <button @click="getdata" class="btn btn-primary">获取图像</button>
+        <button @click="focus" class="btn btn-primary">对焦</button>
+        <button @click="capture" class="btn btn-primary">拍照</button>
+        <div id="pho">
+            <img :src="url" alt="" :class="photo">
+        </div>
+    </div>
+    <script>
+        function arrayBufferToBase64(buffer) {/*将二进制流转化为base64*/
+            var binary = '';
+            var bytes = new Uint8Array(buffer);
+            var len = bytes.byteLength;
+            for (var i = 0; i < len; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+        function picture(obj) {/*嵌套函数不断发http请求*/
+            axios({
+                methord: 'get',
+                url: 'http://192.168.1.106:7758/image',
+                responseType: "arraybuffer"
+            }).then(function (res) {
+                let url1 = arrayBufferToBase64(res.data);
+                obj.url = 'data:image/jpeg;base64,' + url1;
+                obj.photo = 'phoShow'
+                picture(obj);
+            })
+        }
+        const vm = new Vue({
+            el: '#app',
+            data: {
+                url: '',
+                photo: 'phoHide'
+            },
+            methods: {
+                getdata() {
+                    picture(this);
+                },
+                focus() {
+                    axios({
+                        methord: 'get',
+                        url: 'http://192.168.1.106:7758/focus',
+                    })
+                },
+                capture() {
+                    axios({
+                        methord: 'get',
+                        url: 'http://192.168.1.106:7758/capture',
+                    })
+                }
+            }
+        })
+    </script>
+
+</body>
+
+</html>
